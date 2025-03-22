@@ -22,14 +22,32 @@ class SpotifyBrowser:
         """Initialize the browser with Playwright."""
         try:
             self.playwright = sync_playwright().start()
-            self.browser = self.playwright.chromium.launch(headless=self.headless)
+            # Use system installed browsers by specifying the executable path
+            executable_path = "/usr/bin/chromium"
+            self.browser = self.playwright.chromium.launch(
+                headless=self.headless, 
+                executable_path=executable_path
+            )
             self.context = self.browser.new_context()
             self.page = self.context.new_page()
-            logging.debug("Browser initialized successfully")
+            logging.debug("Browser initialized successfully with system Chromium")
         except Exception as e:
             logging.error(f"Failed to initialize browser: {str(e)}")
-            self.close()
-            raise
+            # Try Firefox as a fallback
+            try:
+                executable_path = "/usr/bin/firefox-esr"
+                logging.debug(f"Attempting to use Firefox at: {executable_path}")
+                self.browser = self.playwright.firefox.launch(
+                    headless=self.headless, 
+                    executable_path=executable_path
+                )
+                self.context = self.browser.new_context()
+                self.page = self.context.new_page()
+                logging.debug("Browser initialized successfully with system Firefox")
+            except Exception as e2:
+                logging.error(f"Also failed with Firefox: {str(e2)}")
+                self.close()
+                raise
     
     def is_active(self):
         """Check if the browser is still active."""
