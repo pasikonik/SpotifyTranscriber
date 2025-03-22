@@ -1,0 +1,89 @@
+/* Custom styles for Spotify Transcription Extractor */
+
+.transcription-box {
+    max-height: 500px;
+    overflow-y: auto;
+    white-space: pre-line;
+    font-size: 0.95rem;
+    line-height: 1.6;
+}
+
+/* Style for the copied notification */
+.copy-notification {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background-color: var(--bs-success);
+    color: white;
+    padding: 10px 20px;
+    border-radius: 4px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+    transform: translateY(-100px);
+    transition: transform 0.3s ease-in-out;
+    z-index: 1050;
+}
+
+.copy-notification.show {
+    transform: translateY(0);
+}
+
+/* Spotify brand colors */
+.spotify-green {
+    color: #1DB954;
+}
+
+/* Enhance the appearance of the API code snippet */
+pre {
+    color: #e9ecef;
+    background-color: #212529;
+    border-radius: 4px;
+    padding: 0.5rem;
+    margin: 0;
+    overflow-x: auto;
+}
+
+code {
+    font-family: SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+    font-size: 0.875em;
+}
+
+/* Style for flash messages */
+.alert {
+    border-radius: 4px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+/* Add some spacing between cards */
+.card {
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.card-header {
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Style for buttons */
+.btn {
+    border-radius: 4px;
+    font-weight: 500;
+}
+
+/* Custom scrollbar for the transcription box */
+.transcription-box::-webkit-scrollbar {
+    width: 8px;
+}
+
+.transcription-box::-webkit-scrollbar-track {
+    background: #343a40;
+}
+
+.transcription-box::-webkit-scrollbar-thumb {
+    background-color: #495057;
+    border-radius: 4px;
+}
+
+.transcription-box::-webkit-scrollbar-thumb:hover {
+    background-color: #6c757d;
+}

@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Spotify Transcription Extractor</title>
+    <!-- Bootstrap CSS (Replit Dark Theme) -->
+    <link rel="stylesheet" href="https://cdn.replit.com/agent/bootstrap-agent-dark-theme.min.css">
+    <!-- Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/custom.css') }}">
+</head>
+<body>
+    <div class="container my-4">
+        <header class="mb-4">
+            <div class="d-flex align-items-center justify-content-between">
+                <h1 class="display-5">
+                    <i class="fab fa-spotify text-success me-2"></i>
+                    Spotify Transcription Extractor
+                </h1>
+                {% if session.get('spotify_username') %}
+                <div>
+                    <span class="badge bg-success">
+                        <i class="fas fa-user me-1"></i>
+                        Logged in as {{ session.get('spotify_username') }}
+                    </span>
+                    <form method="post" action="{{ url_for('logout') }}" class="d-inline">
+                        <button type="submit" class="btn btn-sm btn-outline-danger ms-2">
+                            <i class="fas fa-sign-out-alt me-1"></i>
+                            Logout
+                        </button>
+                    </form>
+                </div>
+                {% endif %}
+            </div>
+        </header>
+
+        <!-- Flash Messages -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <!-- Main Content Area -->
+        <div class="row">
+            <!-- Left Column: Login Form (if not logged in) or Episode URL Form -->
+            <div class="col-md-5 mb-4">
+                <div class="card">
+                    <div class="card-header">
+                        {% if session.get('spotify_username') %}
+                            <h5 class="card-title mb-0">
+                                <i class="fas fa-podcast me-2"></i>
+                                Extract Episode Transcription
+                            </h5>
+                        {% else %}
+                            <h5 class="card-title mb-0">
+                                <i class="fas fa-sign-in-alt me-2"></i>
+                                Log in to Spotify
+                            </h5>
+                        {% endif %}
+                    </div>
+                    <div class="card-body">
+                        {% if not session.get('spotify_username') %}
+                            <!-- Login Form -->
+                            <p class="card-text">Enter your Spotify credentials to automate login and extract episode transcriptions.</p>
+                            <form method="post" action="{{ url_for('login') }}">
+                                <div class="mb-3">
+                                    <label for="username" class="form-label">Username or Email</label>
+                                    <input type="text" class="form-control" id="username" name="username" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="password" class="form-label">Password</label>
+                                    <input type="password" class="form-control" id="password" name="password" required>
+                                </div>
+                                <div class="d-grid">
+                                    <button type="submit" class="btn btn-success">
+                                        <i class="fas fa-sign-in-alt me-2"></i>
+                                        Login to Spotify
+                                    </button>
+                                </div>
+                            </form>
+                        {% else %}
+                            <!-- Episode URL Form -->
+                            <p class="card-text">Enter a Spotify episode URL to extract its transcription.</p>
+                            <form method="post" action="{{ url_for('extract') }}">
+                                <div class="mb-3">
+                                    <label for="episode_url" class="form-label">Spotify Episode URL</label>
+                                    <input type="url" class="form-control" id="episode_url" name="episode_url" 
+                                           placeholder="https://open.spotify.com/episode/..." 
+                                           value="{{ episode_url|default('') }}" required>
+                                </div>
+                                <div class="d-grid">
+                                    <button type="submit" class="btn btn-primary">
+                                        <i class="fas fa-file-alt me-2"></i>
+                                        Extract Transcription
+                                    </button>
+                                </div>
+                            </form>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <!-- API Instructions Card -->
+                <div class="card mt-4">
+                    <div class="card-header">
+                        <h5 class="card-title mb-0">
+                            <i class="fas fa-code me-2"></i>
+                            API Usage
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <p class="card-text">Use our API to extract transcriptions programmatically:</p>
+                        <div class="bg-dark p-2 rounded mb-2">
+                            <pre class="mb-0"><code>POST /api/transcription
+Content-Type: application/json
+
+{
+  "username": "your_spotify_email",
+  "password": "your_spotify_password",
+  "episode_url": "https://open.spotify.com/episode/..."
+}</code></pre>
+                        </div>
+                        <p class="mt-2"><small>The API returns JSON with the extracted transcription or error details.</small></p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Right Column: Transcription Results -->
+            <div class="col-md-7">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="card-title mb-0">
+                            <i class="fas fa-file-alt me-2"></i>
+                            Transcription Results
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        {% if transcription %}
+                            <div class="mb-2">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <span class="text-success">
+                                        <i class="fas fa-check-circle me-1"></i>
+                                        Transcription extracted successfully
+                                    </span>
+                                    <button class="btn btn-sm btn-outline-light" id="copyBtn" onclick="copyTranscription()">
+                                        <i class="fas fa-copy me-1"></i>
+                                        Copy
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="bg-dark p-3 rounded transcription-box" id="transcriptionContent">
+                                {{ transcription|nl2br }}
+                            </div>
+                        {% else %}
+                            <div class="text-center py-5">
+                                <i class="fas fa-file-alt fa-3x mb-3 text-secondary"></i>
+                                <p class="text-secondary">No transcription data available. Login to your Spotify account and extract a transcription to see results here.</p>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS Bundle with Popper -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Custom JS -->
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+</body>
+</html>
